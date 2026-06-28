@@ -38,6 +38,15 @@
             margin-bottom: 30px;
         }
 
+        .template-panel {
+            background: #fef08a;
+            border: 2px dashed #ca8a04;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
         h1, h2, h3 { margin-top: 0; }
 
         .btn {
@@ -55,6 +64,7 @@
         .btn-danger { background-color: var(--danger); }
         .btn-danger:hover { background-color: var(--danger-hover); }
         .btn-success { background-color: var(--success); }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
         
         .form-group {
             margin-bottom: 15px;
@@ -65,7 +75,7 @@
             font-weight: 600;
             color: var(--gray-700);
         }
-        input[type="text"], input[type="date"], input[type="number"], select {
+        input[type="text"], select {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--gray-200);
@@ -73,20 +83,13 @@
             box-sizing: border-box;
         }
 
-        /* Builder Structures */
-        .itinerary-list-manager {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
+        /* Form Structures */
         .section-block {
             border: 2px solid var(--gray-200);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
             background: #fafafa;
-            position: relative;
         }
         .subsection-block {
             border: 1px dashed #cbd5e1;
@@ -108,7 +111,7 @@
             margin-top: 15px;
         }
 
-        /* Preview / Printable Styling */
+        /* Printable Layout styling */
         #print-preview {
             background: white;
             padding: 40px;
@@ -167,7 +170,7 @@
         /* Print Settings */
         @media print {
             body { background: white; padding: 0; }
-            .no-print-zone, .btn, .section-block button, .add-buttons, input[type="file"], hr {
+            .no-print-zone, .btn, button, input, hr {
                 display: none !important;
             }
             #print-preview {
@@ -183,39 +186,46 @@
 <div class="container">
     
     <div class="no-print-zone">
-        <h2>🧳 Itinerary Management Console</h2>
-        
-        <div class="itinerary-list-manager">
-            <div style="flex-grow: 1;">
-                <label for="itinerary-select">Select / Switch Itinerary:</label>
-                <select id="itinerary-select" onchange="switchItinerary()"></select>
-            </div>
-            <button class="btn btn-success" style="margin-top: 24px;" onclick="createNewItinerary()">+ New Itinerary</button>
-            <button class="btn" style="margin-top: 24px; background-color: #475569;" onclick="window.print()">🖨️ Print Current Itinerary</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>🧳 Smart Itinerary Management</h2>
+            <button class="btn btn-sm" style="background-color: #6b7280;" onclick="toggleTemplateEditor()">⚙️ Edit Master Form Template</button>
         </div>
 
-        <hr>
+        <div id="template-editor-panel" class="template-panel">
+            <h3>🛠️ Master Template Editor</h3>
+            <p style="font-size: 13px; color: #854d0e; margin-top: -8px;">Changes made here set up the blank layout for all future itineraries.</p>
+            <div id="template-sections-container"></div>
+            <button class="btn btn-sm" onclick="addTemplateSection()">+ Add New Section to Template</button>
+            <button class="btn btn-sm btn-success" style="float: right;" onclick="toggleTemplateEditor()">Close & Save Template</button>
+            <div style="clear: both;"></div>
+        </div>
 
-        <h3>Global Branding</h3>
-        <div class="form-group">
-            <label>Upload Main Cover / Company Logo</label>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--gray-200);">
+        
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+            <div style="flex-grow: 1;">
+                <label for="itinerary-select">Active Itinerary:</label>
+                <select id="itinerary-select" onchange="switchItinerary()"></select>
+            </div>
+            <button class="btn btn-success" style="margin-top: 24px;" onclick="createNewItineraryFromTemplate()">+ New Itinerary</button>
+            <button class="btn btn-danger" style="margin-top: 24px;" onclick="deleteCurrentItinerary()">🗑️ Delete Itinerary</button>
+            <button class="btn" style="margin-top: 24px; background-color: #475569;" onclick="window.print()">🖨️ Print Itinerary</button>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label>Upload Corporate Header Logo</label>
             <input type="file" accept="image/*" onchange="handleMainLogo(event)">
         </div>
 
-        <hr>
-
-        <div id="dynamic-form-builder">
-            <h3>Edit Layout & Content</h3>
-            <div id="sections-container"></div>
-            <button class="btn" onclick="addCustomSection()">+ Add New Section</button>
-        </div>
+        <h3 style="margin-top: 25px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">✍️ Fill Active Itinerary Data</h3>
+        <div id="active-data-form-container"></div>
     </div>
 
     <div id="print-preview">
         <div class="preview-header">
             <div>
-                <h1 id="view-title" contenteditable="true" oninput="updateDataString('title', this.innerText)">Template Trip Itinerary</h1>
-                <p id="view-subtitle" contenteditable="true" oninput="updateDataString('subtitle', this.innerText)">Prepared for your upcoming adventure</p>
+                <h1 id="view-title" contenteditable="true" oninput="updateActiveMeta('title', this.innerText)">Template Trip Itinerary</h1>
+                <p id="view-subtitle" contenteditable="true" oninput="updateActiveMeta('subtitle', this.innerText)">Prepared for your upcoming adventure</p>
             </div>
             <img id="main-logo-view" class="preview-logo" src="https://via.placeholder.com/150x80?text=Your+Logo" alt="Logo">
         </div>
@@ -226,71 +236,61 @@
 </div>
 
 <script>
-    // State architecture holding multiple itineraries
-    let itineraries = {
-        "itinerary_1": {
-            title: "Europe Summer Escape 2026",
-            subtitle: "Prepared for the Smith Family",
-            sections: [
-                {
-                    id: "sec_1",
-                    title: "Trip Details & Overview",
-                    logo: "https://cdn-icons-png.flaticon.com/512/826/826070.png",
-                    subsections: [
-                        {
-                            id: "sub_1",
-                            title: "General Information",
-                            fields: [
-                                { label: "Destinations", value: "Paris, London, Rome" },
-                                { label: "Start Date", value: "2026-07-15" },
-                                { label: "End Date", value: "2026-07-30" }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: "sec_2",
-                    title: "Flight Bookings",
-                    logo: "https://cdn-icons-png.flaticon.com/512/784/784307.png",
-                    subsections: [
-                        {
-                            id: "sub_2",
-                            title: "Outbound - Leg 1",
-                            fields: [
-                                { label: "From", value: "New York (JFK)" },
-                                { label: "To", value: "Paris (CDG)" },
-                                { label: "Flight Options & Price", value: "Air France AF007 - $850" }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: "sec_3",
-                    title: "Hotel Accommodations",
-                    logo: "https://cdn-icons-png.flaticon.com/512/2933/2933772.png",
-                    subsections: [
-                        {
-                            id: "sub_3",
-                            title: "Paris Stay",
-                            fields: [
-                                { label: "Hotel Name", value: "Le Marois Hotel" },
-                                { label: "Price per night", value: "$240/night" }
-                            ]
-                        }
-                    ]
-                }
+    // Default initial template config structure if empty local storage
+    const defaultTemplate = [
+        {
+            title: "Trip Details & Overview",
+            logo: "https://cdn-icons-png.flaticon.com/512/826/826070.png",
+            subsections: [
+                { title: "General Information", fields: [{ label: "Destinations" }, { label: "Start Date" }, { label: "End Date" }] }
+            ]
+        },
+        {
+            title: "Flight Bookings",
+            logo: "https://cdn-icons-png.flaticon.com/512/784/784307.png",
+            subsections: [
+                { title: "Outbound Details", fields: [{ label: "From" }, { label: "To" }, { label: "Flight Options & Price" }] }
+            ]
+        },
+        {
+            title: "Hotel Accommodations",
+            logo: "https://cdn-icons-png.flaticon.com/512/2933/2933772.png",
+            subsections: [
+                { title: "Lodging Specs", fields: [{ label: "Hotel Name" }, { label: "Price for each" }] }
             ]
         }
+    ];
+
+    // Core States
+    let masterTemplate = JSON.parse(localStorage.getItem('masterTemplate')) || defaultTemplate;
+    let itineraries = JSON.parse(localStorage.getItem('itineraries')) || {
+        "itinerary_1": {
+            title: "Sample Europe Escape",
+            subtitle: "Prepared for Client",
+            sections: JSON.parse(JSON.stringify(masterTemplate)) // Copy structure
+        }
     };
+    if(Object.keys(itineraries).length === 0) { itineraries["itinerary_1"] = { title: "Sample Escape", subtitle: "Client Info", sections: JSON.parse(JSON.stringify(masterTemplate)) }; }
+    
+    let currentItineraryId = Object.keys(itineraries)[0];
+    let globalLogoSrc = localStorage.getItem('globalLogoSrc') || "https://via.placeholder.com/150x80?text=Your+Logo";
 
-    let currentItineraryId = "itinerary_1";
-    let globalLogoSrc = "https://via.placeholder.com/150x80?text=Your+Logo";
-
-    // Application Initializer
     window.onload = function() {
         populateDropdown();
-        renderBuilderAndPreview();
+        renderTemplateEditor();
+        renderActiveDataFormAndPreview();
     };
+
+    function saveState() {
+        localStorage.setItem('masterTemplate', JSON.stringify(masterTemplate));
+        localStorage.setItem('itineraries', JSON.stringify(itineraries));
+        localStorage.setItem('globalLogoSrc', globalLogoSrc);
+    }
+
+    function toggleTemplateEditor() {
+        const panel = document.getElementById('template-editor-panel');
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+    }
 
     function populateDropdown() {
         const select = document.getElementById('itinerary-select');
@@ -304,28 +304,48 @@
         }
     }
 
-    function createNewItinerary() {
+    function createNewItineraryFromTemplate() {
         const newId = "itinerary_" + Date.now();
+        // Structural deep copy of the configured template layout
+        const clonedSections = JSON.parse(JSON.stringify(masterTemplate));
+        
+        // Ensure values are empty strings on creation
+        clonedSections.forEach(s => s.subsections.forEach(sub => sub.fields.forEach(f => f.value = "")));
+
         itineraries[newId] = {
             title: "Untitled New Itinerary",
             subtitle: "Enter itinerary descriptions here",
-            sections: []
+            sections: clonedSections
         };
         currentItineraryId = newId;
+        saveState();
         populateDropdown();
-        renderBuilderAndPreview();
+        renderActiveDataFormAndPreview();
+    }
+
+    function deleteCurrentItinerary() {
+        if(Object.keys(itineraries).length <= 1) {
+            alert("You must keep at least one active itinerary record.");
+            return;
+        }
+        delete itineraries[currentItineraryId];
+        currentItineraryId = Object.keys(itineraries)[0];
+        saveState();
+        populateDropdown();
+        renderActiveDataFormAndPreview();
     }
 
     function switchItinerary() {
         currentItineraryId = document.getElementById('itinerary-select').value;
-        renderBuilderAndPreview();
+        renderActiveDataFormAndPreview();
     }
 
-    function updateDataString(key, val) {
+    function updateActiveMeta(key, val) {
         itineraries[currentItineraryId][key] = val;
         if(key === 'title') {
             document.getElementById('itinerary-select').options[document.getElementById('itinerary-select').selectedIndex].text = val;
         }
+        saveState();
     }
 
     function handleMainLogo(event) {
@@ -333,56 +353,111 @@
         reader.onload = function(){
             globalLogoSrc = reader.result;
             document.getElementById('main-logo-view').src = globalLogoSrc;
+            saveState();
         }
         reader.readAsDataURL(event.target.files[0]);
     }
 
-    function handleSectionLogo(event, sectionIdx) {
+    function handleTemplateSectionLogo(event, sectionIdx) {
         const reader = new FileReader();
         reader.onload = function(){
-            itineraries[currentItineraryId].sections[sectionIdx].logo = reader.result;
-            renderBuilderAndPreview();
+            masterTemplate[sectionIdx].logo = reader.result;
+            saveState();
+            renderTemplateEditor();
+            renderActiveDataFormAndPreview();
         }
         reader.readAsDataURL(event.target.files[0]);
     }
 
-    // Engine: Generates both the input system and printable display synchronously
-    function renderBuilderAndPreview() {
+    /* RENDER ENGINE 1: MASTER TEMPLATE EDITOR STRUCTURE */
+    function renderTemplateEditor() {
+        const container = document.getElementById('template-sections-container');
+        container.innerHTML = '';
+
+        masterTemplate.forEach((section, sIdx) => {
+            let div = document.createElement('div');
+            div.className = 'section-block';
+            div.style.background = '#fefeff';
+            div.innerHTML = `
+                <div class="field-row">
+                    <input type="text" value="${section.title}" placeholder="Section Title" oninput="masterTemplate[${sIdx}].title = this.value; saveState(); renderActiveDataFormAndPreview();" style="font-weight:bold;">
+                    <button class="btn btn-sm btn-danger" onclick="removeTemplateSection(${sIdx})">Remove Section</button>
+                </div>
+                <div class="form-group" style="margin-top:5px;">
+                    <label style="font-size:11px;">Section Logo / Icon Link:</label>
+                    <input type="file" accept="image/*" onchange="handleTemplateSectionLogo(event, ${sIdx})">
+                </div>
+                <div class="template-sub-hook" style="margin-left: 15px;"></div>
+                <button class="btn btn-sm" style="margin-top:10px; background-color:#93c5fd; color:#1e3a8a;" onclick="addTemplateSubSection(${sIdx})">+ Add Subsection Template</button>
+            `;
+
+            section.subsections.forEach((sub, subIdx) => {
+                let subDiv = document.createElement('div');
+                subDiv.className = 'subsection-block';
+                subDiv.innerHTML = `
+                    <div class="field-row">
+                        <input type="text" value="${sub.title}" placeholder="Subsection Title" oninput="masterTemplate[${sIdx}].subsections[${subIdx}].title = this.value; saveState(); renderActiveDataFormAndPreview();">
+                        <button class="btn btn-sm btn-danger" onclick="removeTemplateSubSection(${sIdx}, ${subIdx})">X</button>
+                    </div>
+                    <div class="template-fields-hook" style="margin-top:10px;"></div>
+                    <button class="btn btn-sm" style="margin-top:5px; background-color:#cbd5e1; color:black;" onclick="addTemplateField(${sIdx}, ${subIdx})">+ Add Field</button>
+                `;
+
+                sub.fields.forEach((field, fIdx) => {
+                    let fRow = document.createElement('div');
+                    fRow.className = 'field-row';
+                    fRow.innerHTML = `
+                        <input type="text" value="${field.label}" placeholder="Field Label (e.g., From)" oninput="masterTemplate[${sIdx}].subsections[${subIdx}].fields[${fIdx}].label = this.value; saveState(); renderActiveDataFormAndPreview();">
+                        <button class="btn btn-sm btn-danger" onclick="removeTemplateField(${sIdx}, ${subIdx}, ${fIdx})">-</button>
+                    `;
+                    subDiv.querySelector('.template-fields-hook').appendChild(fRow);
+                });
+
+                div.querySelector('.template-sub-hook').appendChild(subDiv);
+            });
+
+            container.appendChild(div);
+        });
+    }
+
+    /* TEMPLATE MUTATORS */
+    function addTemplateSection() { masterTemplate.push({ title: "New Custom Section", logo: "", subsections: [] }); saveState(); renderTemplateEditor(); }
+    function removeTemplateSection(sIdx) { masterTemplate.splice(sIdx, 1); saveState(); renderTemplateEditor(); renderActiveDataFormAndPreview(); }
+    function addTemplateSubSection(sIdx) { masterTemplate[sIdx].subsections.push({ title: "New Subsection", fields: [] }); saveState(); renderTemplateEditor(); }
+    function removeTemplateSubSection(sIdx, subIdx) { masterTemplate[sIdx].subsections.splice(subIdx, 1); saveState(); renderTemplateEditor(); renderActiveDataFormAndPreview(); }
+    function addTemplateField(sIdx, subIdx) { masterTemplate[sIdx].subsections[subIdx].fields.push({ label: "New Field" }); saveState(); renderTemplateEditor(); }
+    function removeTemplateField(sIdx, subIdx, fIdx) { masterTemplate[sIdx].subsections[subIdx].fields.splice(fIdx, 1); saveState(); renderTemplateEditor(); renderActiveDataFormAndPreview(); }
+
+
+    /* RENDER ENGINE 2: GENERATE DATA INPUT FORM & LIVE PREVIEW */
+    function renderActiveDataFormAndPreview() {
         const itinerary = itineraries[currentItineraryId];
         
-        // Match static header text elements
+        // Sync Base elements
         document.getElementById('view-title').innerText = itinerary.title;
         document.getElementById('view-subtitle').innerText = itinerary.subtitle;
         document.getElementById('main-logo-view').src = globalLogoSrc;
 
-        const formContainer = document.getElementById('sections-container');
+        const formContainer = document.getElementById('active-data-form-container');
         const previewContainer = document.getElementById('preview-render-area');
         
         formContainer.innerHTML = '';
         previewContainer.innerHTML = '';
 
-        itinerary.sections.forEach((section, sIdx) => {
-            
-            // --- BUILDER HTML GENERATION ---
+        // Safely map values into structural template updates
+        masterTemplate.forEach((tSection, sIdx) => {
+            // Re-verify specific itinerary section matches structural bounds
+            if (!itinerary.sections[sIdx]) {
+                itinerary.sections[sIdx] = { title: tSection.title, logo: tSection.logo, subsections: [] };
+            }
+            let section = itinerary.sections[sIdx];
+            section.title = tSection.title;
+            section.logo = tSection.logo;
+
             let sBlock = document.createElement('div');
             sBlock.className = 'section-block';
-            sBlock.innerHTML = `
-                <div class="form-group">
-                    <label>Section Title</label>
-                    <input type="text" value="${section.title}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].title = this.value; renderBuilderAndPreview();">
-                </div>
-                <div class="form-group">
-                    <label>Section Icon / Mini Logo</label>
-                    <input type="file" accept="image/*" onchange="handleSectionLogo(event, ${sIdx})">
-                </div>
-                <div class="subsections-hook"></div>
-                <div class="action-flex">
-                    <button class="btn btn-success" onclick="addSubSection(${sIdx})">+ Add Subsection</button>
-                    <button class="btn btn-danger" onclick="deleteSection(${sIdx})">Delete Section</button>
-                </div>
-            `;
+            sBlock.innerHTML = `<h4>📁 Section: ${section.title || 'Untitled'}</h4><div class="sub-hook"></div>`;
             
-            // --- PREVIEW HTML GENERATION ---
             let sPreview = document.createElement('div');
             sPreview.className = 'preview-section';
             sPreview.innerHTML = `
@@ -393,95 +468,58 @@
                 <div class="preview-subsections-hook"></div>
             `;
 
-            // Nest Subsections & Fields
-            section.subsections.forEach((sub, subIdx) => {
+            tSection.subsections.forEach((tSub, subIdx) => {
+                if(!section.subsections[subIdx]) {
+                    section.subsections[subIdx] = { title: tSub.title, fields: [] };
+                }
+                let sub = section.subsections[subIdx];
+                sub.title = tSub.title;
+
                 let subBlock = document.createElement('div');
                 subBlock.className = 'subsection-block';
-                subBlock.innerHTML = `
-                    <div class="form-group">
-                        <label>Sub-section Title</label>
-                        <input type="text" value="${sub.title}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].title = this.value; renderBuilderAndPreview();">
-                    </div>
-                    <div class="fields-hook"></div>
-                    <div class="action-flex">
-                        <button class="btn" onclick="addField(${sIdx}, ${subIdx})">+ Add Data Field</button>
-                        <button class="btn btn-danger" onclick="deleteSubSection(${sIdx}, ${subIdx})">Delete Subsection</button>
-                    </div>
-                `;
+                subBlock.innerHTML = `<h5>📄 ${sub.title || 'Untitled'}</h5><div class="fields-hook"></div>`;
 
                 let subPreview = document.createElement('div');
                 subPreview.className = 'preview-subsection';
-                subPreview.innerHTML = `
-                    <h3>${sub.title || 'Untitled Subsection'}</h3>
-                    <div class="preview-grid fields-preview-hook"></div>
-                `;
+                subPreview.innerHTML = `<h3>${sub.title || 'Untitled Subsection'}</h3><div class="preview-grid fields-preview-hook"></div>`;
 
-                sub.fields.forEach((field, fIdx) => {
+                tSub.fields.forEach((tField, fIdx) => {
+                    if(!sub.fields[fIdx]) {
+                        sub.fields[fIdx] = { label: tField.label, value: "" };
+                    }
+                    let field = sub.fields[fIdx];
+                    field.label = tField.label;
+
                     let fRow = document.createElement('div');
-                    fRow.className = 'field-row';
+                    fRow.className = 'form-group';
                     fRow.innerHTML = `
-                        <input type="text" placeholder="Label (e.g. Price)" value="${field.label}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].label = this.value; renderBuilderAndPreview();" style="flex: 1;">
-                        <input type="text" placeholder="Value (e.g. $400)" value="${field.value}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].value = this.value; renderBuilderAndPreview();" style="flex: 2;">
-                        <button class="btn btn-danger" onclick="deleteField(${sIdx}, ${subIdx}, ${fIdx})">X</button>
+                        <label style="font-size:12px; color:#4b5563;">${field.label}</label>
+                        <input type="text" value="${field.value || ''}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].value = this.value; saveState(); renderActiveDataFormAndPreview();">
                     `;
                     subBlock.querySelector('.fields-hook').appendChild(fRow);
 
-                    let fPreview = document.createElement('div');
-                    fPreview.className = 'field-item';
-                    fPreview.innerHTML = `<strong>${field.label || 'Field'}</strong> <span>${field.value || '—'}</span>`;
-                    subPreview.querySelector('.fields-preview-hook').appendChild(fPreview);
+                    if (field.value) { // Render field block to layout if data exists
+                        let fPreview = document.createElement('div');
+                        fPreview.className = 'field-item';
+                        fPreview.innerHTML = `<strong>${field.label || 'Field'}</strong> <span>${field.value}</span>`;
+                        subPreview.querySelector('.fields-preview-hook').appendChild(fPreview);
+                    }
                 });
 
-                sBlock.querySelector('.subsections-hook').appendChild(subBlock);
+                // Clean arrays of legacy overflow objects outside template tracking bounds
+                if(sub.fields.length > tSub.fields.length) sub.fields.splice(tSub.fields.length);
+
+                sBlock.querySelector('.sub-hook').appendChild(subBlock);
                 sPreview.querySelector('.preview-subsections-hook').appendChild(subPreview);
             });
+
+            if(section.subsections.length > tSection.subsections.length) section.subsections.splice(tSection.subsections.length);
 
             formContainer.appendChild(sBlock);
             previewContainer.appendChild(sPreview);
         });
-    }
 
-    // Mutator Logic: Add/Delete Functions
-    function addCustomSection() {
-        itineraries[currentItineraryId].sections.push({
-            id: "sec_" + Date.now(),
-            title: "New Custom Section",
-            logo: "",
-            subsections: []
-        });
-        renderBuilderAndPreview();
-    }
-
-    function deleteSection(sIdx) {
-        itineraries[currentItineraryId].sections.splice(sIdx, 1);
-        renderBuilderAndPreview();
-    }
-
-    function addSubSection(sIdx) {
-        itineraries[currentItineraryId].sections[sIdx].subsections.push({
-            id: "sub_" + Date.now(),
-            title: "New Subsection Suite",
-            fields: []
-        });
-        renderBuilderAndPreview();
-    }
-
-    function deleteSubSection(sIdx, subIdx) {
-        itineraries[currentItineraryId].sections[sIdx].subsections.splice(subIdx, 1);
-        renderBuilderAndPreview();
-    }
-
-    function addField(sIdx, subIdx) {
-        itineraries[currentItineraryId].sections[sIdx].subsections[subIdx].fields.push({
-            label: "Label Title",
-            value: "Value data"
-        });
-        renderBuilderAndPreview();
-    }
-
-    function deleteField(sIdx, subIdx, fIdx) {
-        itineraries[currentItineraryId].sections[sIdx].subsections[subIdx].fields.splice(fIdx, 1);
-        renderBuilderAndPreview();
+        if(itinerary.sections.length > masterTemplate.length) itinerary.sections.splice(masterTemplate.length);
     }
 </script>
 
