@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Travel Itinerary Builder</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .no-print-zone {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+        .btn-success { background-color: var(--success); }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        input[type="text"], input[type="date"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        /* Builder Structures */
+        .itinerary-list-manager {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .section-block {
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+            position: relative;
+        }
+        .subsection-block {
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            background: white;
+        }
+        .field-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .action-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        /* Preview / Printable Styling */
+        #print-preview {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .preview-logo {
+            max-height: 80px;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        .preview-section {
+            margin-bottom: 30px;
+        }
+        .section-title-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        .section-icon {
+            max-height: 40px;
+            max-width: 40px;
+            object-fit: contain;
+        }
+        .preview-subsection {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            background: var(--gray-100);
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .field-item strong {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        /* Print Settings */
+        @media print {
+            body { background: white; padding: 0; }
+            .no-print-zone, .btn, .section-block button, .add-buttons, input[type="file"], hr {
+                display: none !important;
+            }
+            #print-preview {
+                box-shadow: none;
+                padding: 0;
+            }
+            .preview-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="no-print-zone">
+        <h2>🧳 Itinerary Management Console</h2>
+        
+        <div class="itinerary-list-manager">
+            <div style="flex-grow: 1;">
+                <label for="itinerary-select">Select / Switch Itinerary:</label>
+                <select id="itinerary-select" onchange="switchItinerary()"></select>
+            </div>
+            <button class="btn btn-success" style="margin-top: 24px;" onclick="createNewItinerary()">+ New Itinerary</button>
+            <button class="btn" style="margin-top: 24px; background-color: #475569;" onclick="window.print()">🖨️ Print Current Itinerary</button>
+        </div>
+
+        <hr>
+
+        <h3>Global Branding</h3>
+        <div class="form-group">
+            <label>Upload Main Cover / Company Logo</label>
+            <input type="file" accept="image/*" onchange="handleMainLogo(event)">
+        </div>
+
+        <hr>
+
+        <div id="dynamic-form-builder">
+            <h3>Edit Layout & Content</h3>
+            <div id="sections-container"></div>
+            <button class="btn" onclick="addCustomSection()">+ Add New Section</button>
+        </div>
+    </div>
+
+    <div id="print-preview">
+        <div class="preview-header">
+            <div>
+                <h1 id="view-title" contenteditable="true" oninput="updateDataString('title', this.innerText)">Template Trip Itinerary</h1>
+                <p id="view-subtitle" contenteditable="true" oninput="updateDataString('subtitle', this.innerText)">Prepared for your upcoming adventure</p>
+            </div>
+            <img id="main-logo-view" class="preview-logo" src="https://via.placeholder.com/150x80?text=Your+Logo" alt="Logo">
+        </div>
+
+        <div id="preview-render-area"></div>
+    </div>
+
+</div>
+
+<script>
+    // State architecture holding multiple itineraries
+    let itineraries = {
+        "itinerary_1": {
+            title: "Europe Summer Escape 2026",
+            subtitle: "Prepared for the Smith Family",
+            sections: [
+                {
+                    id: "sec_1",
+                    title: "Trip Details & Overview",
+                    logo: "https://cdn-icons-png.flaticon.com/512/826/826070.png",
+                    subsections: [
+                        {
+                            id: "sub_1",
+                            title: "General Information",
+                            fields: [
+                                { label: "Destinations", value: "Paris, London, Rome" },
+                                { label: "Start Date", value: "2026-07-15" },
+                                { label: "End Date", value: "2026-07-30" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "sec_2",
+                    title: "Flight Bookings",
+                    logo: "https://cdn-icons-png.flaticon.com/512/784/784307.png",
+                    subsections: [
+                        {
+                            id: "sub_2",
+                            title: "Outbound - Leg 1",
+                            fields: [
+                                { label: "From", value: "New York (JFK)" },
+                                { label: "To", value: "Paris (CDG)" },
+                                { label: "Flight Options & Price", value: "Air France AF007 - $850" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "sec_3",
+                    title: "Hotel Accommodations",
+                    logo: "https://cdn-icons-png.flaticon.com/512/2933/2933772.png",
+                    subsections: [
+                        {
+                            id: "sub_3",
+                            title: "Paris Stay",
+                            fields: [
+                                { label: "Hotel Name", value: "Le Marois Hotel" },
+                                { label: "Price per night", value: "$240/night" }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+
+    let currentItineraryId = "itinerary_1";
+    let globalLogoSrc = "https://via.placeholder.com/150x80?text=Your+Logo";
+
+    // Application Initializer
+    window.onload = function() {
+        populateDropdown();
+        renderBuilderAndPreview();
+    };
+
+    function populateDropdown() {
+        const select = document.getElementById('itinerary-select');
+        select.innerHTML = '';
+        for (let id in itineraries) {
+            let opt = document.createElement('option');
+            opt.value = id;
+            opt.innerText = itineraries[id].title;
+            opt.selected = (id === currentItineraryId);
+            select.appendChild(opt);
+        }
+    }
+
+    function createNewItinerary() {
+        const newId = "itinerary_" + Date.now();
+        itineraries[newId] = {
+            title: "Untitled New Itinerary",
+            subtitle: "Enter itinerary descriptions here",
+            sections: []
+        };
+        currentItineraryId = newId;
+        populateDropdown();
+        renderBuilderAndPreview();
+    }
+
+    function switchItinerary() {
+        currentItineraryId = document.getElementById('itinerary-select').value;
+        renderBuilderAndPreview();
+    }
+
+    function updateDataString(key, val) {
+        itineraries[currentItineraryId][key] = val;
+        if(key === 'title') {
+            document.getElementById('itinerary-select').options[document.getElementById('itinerary-select').selectedIndex].text = val;
+        }
+    }
+
+    function handleMainLogo(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            globalLogoSrc = reader.result;
+            document.getElementById('main-logo-view').src = globalLogoSrc;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function handleSectionLogo(event, sectionIdx) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            itineraries[currentItineraryId].sections[sectionIdx].logo = reader.result;
+            renderBuilderAndPreview();
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // Engine: Generates both the input system and printable display synchronously
+    function renderBuilderAndPreview() {
+        const itinerary = itineraries[currentItineraryId];
+        
+        // Match static header text elements
+        document.getElementById('view-title').innerText = itinerary.title;
+        document.getElementById('view-subtitle').innerText = itinerary.subtitle;
+        document.getElementById('main-logo-view').src = globalLogoSrc;
+
+        const formContainer = document.getElementById('sections-container');
+        const previewContainer = document.getElementById('preview-render-area');
+        
+        formContainer.innerHTML = '';
+        previewContainer.innerHTML = '';
+
+        itinerary.sections.forEach((section, sIdx) => {
+            
+            // --- BUILDER HTML GENERATION ---
+            let sBlock = document.createElement('div');
+            sBlock.className = 'section-block';
+            sBlock.innerHTML = `
+                <div class="form-group">
+                    <label>Section Title</label>
+                    <input type="text" value="${section.title}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].title = this.value; renderBuilderAndPreview();">
+                </div>
+                <div class="form-group">
+                    <label>Section Icon / Mini Logo</label>
+                    <input type="file" accept="image/*" onchange="handleSectionLogo(event, ${sIdx})">
+                </div>
+                <div class="subsections-hook"></div>
+                <div class="action-flex">
+                    <button class="btn btn-success" onclick="addSubSection(${sIdx})">+ Add Subsection</button>
+                    <button class="btn btn-danger" onclick="deleteSection(${sIdx})">Delete Section</button>
+                </div>
+            `;
+            
+            // --- PREVIEW HTML GENERATION ---
+            let sPreview = document.createElement('div');
+            sPreview.className = 'preview-section';
+            sPreview.innerHTML = `
+                <div class="section-title-container">
+                    ${section.logo ? `<img class="section-icon" src="${section.logo}">` : ''}
+                    <h2>${section.title || 'Untitled Section'}</h2>
+                </div>
+                <div class="preview-subsections-hook"></div>
+            `;
+
+            // Nest Subsections & Fields
+            section.subsections.forEach((sub, subIdx) => {
+                let subBlock = document.createElement('div');
+                subBlock.className = 'subsection-block';
+                subBlock.innerHTML = `
+                    <div class="form-group">
+                        <label>Sub-section Title</label>
+                        <input type="text" value="${sub.title}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].title = this.value; renderBuilderAndPreview();">
+                    </div>
+                    <div class="fields-hook"></div>
+                    <div class="action-flex">
+                        <button class="btn" onclick="addField(${sIdx}, ${subIdx})">+ Add Data Field</button>
+                        <button class="btn btn-danger" onclick="deleteSubSection(${sIdx}, ${subIdx})">Delete Subsection</button>
+                    </div>
+                `;
+
+                let subPreview = document.createElement('div');
+                subPreview.className = 'preview-subsection';
+                subPreview.innerHTML = `
+                    <h3>${sub.title || 'Untitled Subsection'}</h3>
+                    <div class="preview-grid fields-preview-hook"></div>
+                `;
+
+                sub.fields.forEach((field, fIdx) => {
+                    let fRow = document.createElement('div');
+                    fRow.className = 'field-row';
+                    fRow.innerHTML = `
+                        <input type="text" placeholder="Label (e.g. Price)" value="${field.label}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].label = this.value; renderBuilderAndPreview();" style="flex: 1;">
+                        <input type="text" placeholder="Value (e.g. $400)" value="${field.value}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].value = this.value; renderBuilderAndPreview();" style="flex: 2;">
+                        <button class="btn btn-danger" onclick="deleteField(${sIdx}, ${subIdx}, ${fIdx})">X</button>
+                    `;
+                    subBlock.querySelector('.fields-hook').appendChild(fRow);
+
+                    let fPreview = document.createElement('div');
+                    fPreview.className = 'field-item';
+                    fPreview.innerHTML = `<strong>${field.label || 'Field'}</strong> <span>${field.value || '—'}</span>`;
+                    subPreview.querySelector('.fields-preview-hook').appendChild(fPreview);
+                });
+
+                sBlock.querySelector('.subsections-hook').appendChild(subBlock);
+                sPreview.querySelector('.preview-subsections-hook').appendChild(subPreview);
+            });
+
+            formContainer.appendChild(sBlock);
+            previewContainer.appendChild(sPreview);
+        });
+    }
+
+    // Mutator Logic: Add/Delete Functions
+    function addCustomSection() {
+        itineraries[currentItineraryId].sections.push({
+            id: "sec_" + Date.now(),
+            title: "New Custom Section",
+            logo: "",
+            subsections: []
+        });
+        renderBuilderAndPreview();
+    }
+
+    function deleteSection(sIdx) {
+        itineraries[currentItineraryId].sections.splice(sIdx, 1);
+        renderBuilderAndPreview();
+    }
+
+    function addSubSection(sIdx) {
+        itineraries[currentItineraryId].sections[sIdx].subsections.push({
+            id: "sub_" + Date.now(),
+            title: "New Subsection Suite",
+            fields: []
+        });
+        renderBuilderAndPreview();
+    }
+
+    function deleteSubSection(sIdx, subIdx) {
+        itineraries[currentItineraryId].sections[sIdx].subsections.splice(subIdx, 1);
+        renderBuilderAndPreview();
+    }
+
+    function addField(sIdx, subIdx) {
+        itineraries[currentItineraryId].sections[sIdx].subsections[subIdx].fields.push({
+            label: "Label Title",
+            value: "Value data"
+        });
+        renderBuilderAndPreview();
+    }
+
+    function deleteField(sIdx, subIdx, fIdx) {
+        itineraries[currentItineraryId].sections[sIdx].subsections[subIdx].fields.splice(fIdx, 1);
+        renderBuilderAndPreview();
+    }
+</script>
+
+</body>
+</html>
