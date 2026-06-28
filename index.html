@@ -30,7 +30,7 @@
             margin: 0 auto;
         }
 
-        .no-print-zone {
+        .panel {
             background: white;
             padding: 25px;
             border-radius: 12px;
@@ -47,7 +47,7 @@
             display: none;
         }
 
-        h1, h2, h3 { margin-top: 0; }
+        h1, h2, h3, h4, h5 { margin-top: 0; }
 
         .btn {
             background-color: var(--primary);
@@ -59,11 +59,16 @@
             font-weight: 600;
             font-size: 14px;
             transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         .btn:hover { background-color: var(--primary-hover); }
         .btn-danger { background-color: var(--danger); }
         .btn-danger:hover { background-color: var(--danger-hover); }
         .btn-success { background-color: var(--success); }
+        .btn-secondary { background-color: #475569; }
+        .btn-secondary:hover { background-color: #334155; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
         
         .form-group {
@@ -83,7 +88,7 @@
             box-sizing: border-box;
         }
 
-        /* Form Structures */
+        /* Form Layout Structuring */
         .section-block {
             border: 2px solid var(--gray-200);
             border-radius: 8px;
@@ -104,14 +109,12 @@
             margin-bottom: 10px;
             align-items: center;
         }
-        .action-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-        }
+        
+        /* Views */
+        #editor-view { display: block; }
+        #preview-view { display: none; }
 
-        /* Printable Layout styling */
+        /* Printable Paper Presentation */
         #print-preview {
             background: white;
             padding: 40px;
@@ -167,12 +170,13 @@
             color: #64748b;
         }
 
-        /* Print Settings */
+        /* Clean Print Processing */
         @media print {
             body { background: white; padding: 0; }
-            .no-print-zone, .btn, button, input, hr {
+            .no-print-bar, .btn, button, input, select, hr, .panel {
                 display: none !important;
             }
+            #preview-view { display: block !important; }
             #print-preview {
                 box-shadow: none;
                 padding: 0;
@@ -185,58 +189,83 @@
 
 <div class="container">
     
-    <div class="no-print-zone">
+    <div id="editor-view" class="panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>🧳 Smart Itinerary Management</h2>
-            <button class="btn btn-sm" style="background-color: #6b7280;" onclick="toggleTemplateEditor()">⚙️ Edit Master Form Template</button>
+            <h2>🧳 Itinerary Management</h2>
+            <button class="btn btn-sm btn-secondary" onclick="toggleTemplateEditor()">⚙️ Edit Master Form Template</button>
         </div>
 
         <div id="template-editor-panel" class="template-panel">
-            <h3>🛠️ Master Template Editor</h3>
-            <p style="font-size: 13px; color: #854d0e; margin-top: -8px;">Changes made here set up the blank layout for all future itineraries.</p>
+            <h3> master Template Editor</h3>
+            <p style="font-size: 13px; color: #854d0e; margin-top: -8px;">Changes made here set up the default layout fields for all new itineraries.</p>
             <div id="template-sections-container"></div>
             <button class="btn btn-sm" onclick="addTemplateSection()">+ Add New Section to Template</button>
-            <button class="btn btn-sm btn-success" style="float: right;" onclick="toggleTemplateEditor()">Close & Save Template</button>
+            <button class="btn btn-sm btn-success" style="float: right;" onclick="toggleTemplateEditor()">Save & Close Template</button>
             <div style="clear: both;"></div>
         </div>
 
         <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--gray-200);">
         
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-            <div style="flex-grow: 1;">
-                <label for="itinerary-select">Active Itinerary:</label>
+        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 25px;">
+            <div style="flex-grow: 1; min-width: 200px;">
+                <label for="itinerary-select">Active Itinerary Selection:</label>
                 <select id="itinerary-select" onchange="switchItinerary()"></select>
             </div>
-            <button class="btn btn-success" style="margin-top: 24px;" onclick="createNewItineraryFromTemplate()">+ New Itinerary</button>
-            <button class="btn btn-danger" style="margin-top: 24px;" onclick="deleteCurrentItinerary()">🗑️ Delete Itinerary</button>
-            <button class="btn" style="margin-top: 24px; background-color: #475569;" onclick="window.print()">🖨️ Print Itinerary</button>
+            <button class="btn btn-success" onclick="createNewItineraryFromTemplate()">+ New Itinerary</button>
+            <button class="btn btn-danger" onclick="deleteCurrentItinerary()">🗑️ Delete</button>
+            <button class="btn" style="background-color: #059669;" onclick="showPreviewMode()">👁️ View Ready Itinerary</button>
         </div>
 
-        <div class="form-group" style="margin-top: 20px;">
-            <label>Upload Corporate Header Logo</label>
+        <div class="form-group" style="background: var(--gray-100); padding: 15px; border-radius: 8px;">
+            <label>Upload Header Company Logo</label>
             <input type="file" accept="image/*" onchange="handleMainLogo(event)">
         </div>
 
-        <h3 style="margin-top: 25px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px;">✍️ Fill Active Itinerary Data</h3>
-        <div id="active-data-form-container"></div>
-    </div>
-
-    <div id="print-preview">
-        <div class="preview-header">
-            <div>
-                <h1 id="view-title" contenteditable="true" oninput="updateActiveMeta('title', this.innerText)">Template Trip Itinerary</h1>
-                <p id="view-subtitle" contenteditable="true" oninput="updateActiveMeta('subtitle', this.innerText)">Prepared for your upcoming adventure</p>
-            </div>
-            <img id="main-logo-view" class="preview-logo" src="https://via.placeholder.com/150x80?text=Your+Logo" alt="Logo">
+        <h3 style="margin-top: 30px; border-bottom: 2px solid var(--primary); padding-bottom: 5px;">✍️ Fill Active Itinerary Data</h3>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Trip Title</label>
+            <input type="text" id="input-trip-title" oninput="updateActiveMeta('title', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Trip Subtitle / Description</label>
+            <input type="text" id="input-trip-subtitle" oninput="updateActiveMeta('subtitle', this.value)">
         </div>
 
-        <div id="preview-render-area"></div>
+        <div id="active-data-form-container"></div>
+        
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn btn-success" style="font-size: 16px; padding: 12px 24px;" onclick="showPreviewMode()">👁️ View Ready Itinerary</button>
+        </div>
+    </div>
+
+
+    <div id="preview-view">
+        <div class="no-print-bar" style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #e2e8f0; padding: 12px; border-radius: 8px;">
+            <button class="btn btn-secondary" onclick="showEditorMode()">⬅️ Back to Editor</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="toggleTemplateEditor(); showEditorMode();">🛠️ Edit Fields & Sections of this Itinerary</button>
+                <button class="btn" style="background-color: #1e293b;" onclick="window.print()">🖨️ Print Document</button>
+            </div>
+        </div>
+
+        <div id="print-preview">
+            <div class="preview-header">
+                <div>
+                    <h1 id="view-title">Template Trip Itinerary</h1>
+                    <p id="view-subtitle">Prepared for your upcoming adventure</p>
+                </div>
+                <img id="main-logo-view" class="preview-logo" src="https://via.placeholder.com/150x80?text=Your+Logo" alt="Logo">
+            </div>
+
+            <div id="preview-render-area"></div>
+        </div>
     </div>
 
 </div>
 
 <script>
-    // Default initial template config structure if empty local storage
+    // Initial Fallback structure
     const defaultTemplate = [
         {
             title: "Trip Details & Overview",
@@ -261,16 +290,15 @@
         }
     ];
 
-    // Core States
+    // Core Architecture States
     let masterTemplate = JSON.parse(localStorage.getItem('masterTemplate')) || defaultTemplate;
     let itineraries = JSON.parse(localStorage.getItem('itineraries')) || {
         "itinerary_1": {
             title: "Sample Europe Escape",
-            subtitle: "Prepared for Client",
-            sections: JSON.parse(JSON.stringify(masterTemplate)) // Copy structure
+            subtitle: "Prepared for Client Data",
+            sections: JSON.parse(JSON.stringify(masterTemplate))
         }
     };
-    if(Object.keys(itineraries).length === 0) { itineraries["itinerary_1"] = { title: "Sample Escape", subtitle: "Client Info", sections: JSON.parse(JSON.stringify(masterTemplate)) }; }
     
     let currentItineraryId = Object.keys(itineraries)[0];
     let globalLogoSrc = localStorage.getItem('globalLogoSrc') || "https://via.placeholder.com/150x80?text=Your+Logo";
@@ -287,9 +315,22 @@
         localStorage.setItem('globalLogoSrc', globalLogoSrc);
     }
 
+    function showPreviewMode() {
+        renderActiveDataFormAndPreview();
+        document.getElementById('editor-view').style.display = 'none';
+        document.getElementById('preview-view').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function showEditorMode() {
+        document.getElementById('editor-view').style.display = 'block';
+        document.getElementById('preview-view').style.display = 'none';
+    }
+
     function toggleTemplateEditor() {
         const panel = document.getElementById('template-editor-panel');
         panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        if(panel.style.display === 'block') { panel.scrollIntoView({ behavior: 'smooth' }); }
     }
 
     function populateDropdown() {
@@ -302,14 +343,14 @@
             opt.selected = (id === currentItineraryId);
             select.appendChild(opt);
         }
+        // Update input titles mapping text
+        document.getElementById('input-trip-title').value = itineraries[currentItineraryId].title;
+        document.getElementById('input-trip-subtitle').value = itineraries[currentItineraryId].subtitle;
     }
 
     function createNewItineraryFromTemplate() {
         const newId = "itinerary_" + Date.now();
-        // Structural deep copy of the configured template layout
         const clonedSections = JSON.parse(JSON.stringify(masterTemplate));
-        
-        // Ensure values are empty strings on creation
         clonedSections.forEach(s => s.subsections.forEach(sub => sub.fields.forEach(f => f.value = "")));
 
         itineraries[newId] = {
@@ -328,15 +369,19 @@
             alert("You must keep at least one active itinerary record.");
             return;
         }
-        delete itineraries[currentItineraryId];
-        currentItineraryId = Object.keys(itineraries)[0];
-        saveState();
-        populateDropdown();
-        renderActiveDataFormAndPreview();
+        if(confirm("Are you sure you want to permanently delete this itinerary?")){
+            delete itineraries[currentItineraryId];
+            currentItineraryId = Object.keys(itineraries)[0];
+            saveState();
+            populateDropdown();
+            renderActiveDataFormAndPreview();
+        }
     }
 
     function switchItinerary() {
         currentItineraryId = document.getElementById('itinerary-select').value;
+        document.getElementById('input-trip-title').value = itineraries[currentItineraryId].title;
+        document.getElementById('input-trip-subtitle').value = itineraries[currentItineraryId].subtitle;
         renderActiveDataFormAndPreview();
     }
 
@@ -369,7 +414,7 @@
         reader.readAsDataURL(event.target.files[0]);
     }
 
-    /* RENDER ENGINE 1: MASTER TEMPLATE EDITOR STRUCTURE */
+    /* ENGINE 1: MASTER TEMPLATE EDITOR BUILDER */
     function renderTemplateEditor() {
         const container = document.getElementById('template-sections-container');
         container.innerHTML = '';
@@ -384,7 +429,7 @@
                     <button class="btn btn-sm btn-danger" onclick="removeTemplateSection(${sIdx})">Remove Section</button>
                 </div>
                 <div class="form-group" style="margin-top:5px;">
-                    <label style="font-size:11px;">Section Logo / Icon Link:</label>
+                    <label style="font-size:11px;">Section Logo / Icon image:</label>
                     <input type="file" accept="image/*" onchange="handleTemplateSectionLogo(event, ${sIdx})">
                 </div>
                 <div class="template-sub-hook" style="margin-left: 15px;"></div>
@@ -407,7 +452,7 @@
                     let fRow = document.createElement('div');
                     fRow.className = 'field-row';
                     fRow.innerHTML = `
-                        <input type="text" value="${field.label}" placeholder="Field Label (e.g., From)" oninput="masterTemplate[${sIdx}].subsections[${subIdx}].fields[${fIdx}].label = this.value; saveState(); renderActiveDataFormAndPreview();">
+                        <input type="text" value="${field.label}" placeholder="Field Label" oninput="masterTemplate[${sIdx}].subsections[${subIdx}].fields[${fIdx}].label = this.value; saveState(); renderActiveDataFormAndPreview();">
                         <button class="btn btn-sm btn-danger" onclick="removeTemplateField(${sIdx}, ${subIdx}, ${fIdx})">-</button>
                     `;
                     subDiv.querySelector('.template-fields-hook').appendChild(fRow);
@@ -420,7 +465,6 @@
         });
     }
 
-    /* TEMPLATE MUTATORS */
     function addTemplateSection() { masterTemplate.push({ title: "New Custom Section", logo: "", subsections: [] }); saveState(); renderTemplateEditor(); }
     function removeTemplateSection(sIdx) { masterTemplate.splice(sIdx, 1); saveState(); renderTemplateEditor(); renderActiveDataFormAndPreview(); }
     function addTemplateSubSection(sIdx) { masterTemplate[sIdx].subsections.push({ title: "New Subsection", fields: [] }); saveState(); renderTemplateEditor(); }
@@ -429,11 +473,10 @@
     function removeTemplateField(sIdx, subIdx, fIdx) { masterTemplate[sIdx].subsections[subIdx].fields.splice(fIdx, 1); saveState(); renderTemplateEditor(); renderActiveDataFormAndPreview(); }
 
 
-    /* RENDER ENGINE 2: GENERATE DATA INPUT FORM & LIVE PREVIEW */
+    /* ENGINE 2: MAP CONTENT DATA */
     function renderActiveDataFormAndPreview() {
         const itinerary = itineraries[currentItineraryId];
         
-        // Sync Base elements
         document.getElementById('view-title').innerText = itinerary.title;
         document.getElementById('view-subtitle').innerText = itinerary.subtitle;
         document.getElementById('main-logo-view').src = globalLogoSrc;
@@ -444,9 +487,7 @@
         formContainer.innerHTML = '';
         previewContainer.innerHTML = '';
 
-        // Safely map values into structural template updates
         masterTemplate.forEach((tSection, sIdx) => {
-            // Re-verify specific itinerary section matches structural bounds
             if (!itinerary.sections[sIdx]) {
                 itinerary.sections[sIdx] = { title: tSection.title, logo: tSection.logo, subsections: [] };
             }
@@ -494,11 +535,11 @@
                     fRow.className = 'form-group';
                     fRow.innerHTML = `
                         <label style="font-size:12px; color:#4b5563;">${field.label}</label>
-                        <input type="text" value="${field.value || ''}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].value = this.value; saveState(); renderActiveDataFormAndPreview();">
+                        <input type="text" value="${field.value || ''}" oninput="itineraries['${currentItineraryId}'].sections[${sIdx}].subsections[${subIdx}].fields[${fIdx}].value = this.value; saveState();">
                     `;
                     subBlock.querySelector('.fields-hook').appendChild(fRow);
 
-                    if (field.value) { // Render field block to layout if data exists
+                    if (field.value) { 
                         let fPreview = document.createElement('div');
                         fPreview.className = 'field-item';
                         fPreview.innerHTML = `<strong>${field.label || 'Field'}</strong> <span>${field.value}</span>`;
@@ -506,7 +547,6 @@
                     }
                 });
 
-                // Clean arrays of legacy overflow objects outside template tracking bounds
                 if(sub.fields.length > tSub.fields.length) sub.fields.splice(tSub.fields.length);
 
                 sBlock.querySelector('.sub-hook').appendChild(subBlock);
